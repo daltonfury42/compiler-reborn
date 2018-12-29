@@ -2,7 +2,7 @@
   #include <stdio.h>
   #include "y.tab.h"
   #include <stdlib.h>
-
+  #include "exptree.h"
   	
 %}
 	
@@ -10,7 +10,7 @@
 	
 [0-9]+ 	{
 		int number = atoi(yytext); 
-		yylval = number; 
+		yylval = makeLeafNode(number);	
 		return NUM;
 	}
 
