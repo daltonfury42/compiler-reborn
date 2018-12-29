@@ -1,6 +1,7 @@
 %{
   #include <stdio.h>
   int yyerror();
+  int yylex(void);
 %}
 
 %token NUM END
@@ -10,13 +11,15 @@
 
 %%
 
-start 	: expr END  { printf("Expression value = %d",$1); }
+start 	: expr END  { printf("Expression value = %d\n", $1); }
 	;
 
-expr	: expr PLUS expr		{$$ = $1 + $3;}
-	| expr MUL expr		{$$ = $1 * $3;}
-	| '(' expr ')'	 	{$$ = $2;}
-	| NUM			{$$ = $1;}
+expr	: expr PLUS expr	{ $$ = $1 + $3; }
+	| expr MINUS expr	{ $$ = $1 - $3; }
+	| expr MUL expr		{ $$ = $1 * $3; }
+	| expr DIV expr		{ $$ = $1 / $3; }
+	| '(' expr ')'	 	{ $$ = $2; }
+	| NUM			{ $$ = $1; }
 	;
 
 %%
