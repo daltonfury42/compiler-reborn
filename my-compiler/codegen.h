@@ -1,6 +1,9 @@
 #ifndef CODEGEN_H
 #define CODEGEN_H
 
-int evaluate(struct tnode *t);
+#include <stdio.h>
+#include "exptree.h"
+
+void codeGenXsm(struct tnode* t, FILE* target_file);
 
 #endif

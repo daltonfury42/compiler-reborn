@@ -4,10 +4,10 @@
   #include "exptree.h"
   #include "codegen.h"
 
-  #define YYSTYPE tnode* 
-
   int yyerror();
   int yylex(void);
+
+  #define YYSTYPE tnode* 
 
 %}
 
@@ -19,9 +19,9 @@
 %%
 
 start 	: expr END		{	 
-       					//FILE* fptr=fopen("target_file1.xsm","w");
-					printf("Ans: %d\n", evaluate($1));
-					//fclose(fptr);
+       					FILE* fptr=fopen("target_file1.xsm","w");
+					codeGenXsm($1, fptr);	
+					fclose(fptr);
 	
 					exit(0);
 				}
