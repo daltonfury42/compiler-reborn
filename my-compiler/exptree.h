@@ -3,17 +3,19 @@
 
 typedef struct tnode 
 {
-	int isOperator;
-	int val;
-	int op; 			//indicates the name of the operator for a non leaf node
-	struct tnode *left,*right; 	//left and right branches
+	int val;	// value of a number for NUM nodes.
+	int type;	//type of variable
+	char varname;	//name of a variable for ID nodes  
+	int nodetype;  // information about non-leaf nodes - read/write/connector/+/* etc.  
+	struct tnode *left,*right; //left and right branches   
 } tnode;
 
-
-/*Make a leaf tnode and set the value of val field*/
-struct tnode* makeLeafNode(int n);
-	
-/*Make a tnode with opertor, left and right branches set*/
-struct tnode* makeOperatorNode(int op,struct tnode *l,struct tnode *r);
+tnode* makeConnectorNode(tnode* l, tnode* r);
+tnode* makeReadNode(tnode* lr);
+tnode* makeWriteNode(tnode* lr);
+tnode* makeLeafNodeVar(char ch);
+tnode* makeLeafNodeNum(int n);
+tnode* makeAssignmentNode(tnode* l, tnode* r);
+tnode* makeOperatorNode(int nodetype, tnode *l,tnode *r);
 
 #endif
