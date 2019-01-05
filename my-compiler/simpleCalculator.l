@@ -20,6 +20,7 @@
 
 [a-zA-Z] 	{
 				yylval = makeLeafNodeVar(*yytext);
+				return VARIABLE;
 			}
 
 "+" 	{ return PLUS; }
@@ -32,11 +33,9 @@
 
 "="		{ return ASGN; }
 
-[ \t] 	{ }
+[ \t\n] 	{ }
 
 [();] 	{ return *yytext; }
-
-[\n] 	{ return END; }
 
 . 	{ 
 		yyerror("unknown character\n");

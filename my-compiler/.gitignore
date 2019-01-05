@@ -4,3 +4,4 @@ lex.yy.c
 y.tab.h.gch
 a.out
 target_file1.xsm
+target_file.xsm

@@ -4,14 +4,18 @@
   #include "exptree.h"
   #include "codegen.h"
 
-  int yyerror();
   int yylex(void);
+
+  void yyerror(const char *s);
 
   #define YYSTYPE tnode* 
 
 %}
 
-%token CONNECTOR READ WRITE VARIABLE ASGN BEG END NUM
+
+%error-verbose
+
+%token CONNECTOR READ WRITE VARIABLE ASGN BEG END NUM OPERATOR
 
 %left PLUS MINUS
 %left DIV MUL
@@ -19,13 +23,21 @@
 %%
 
 program 	: BEG slist END 	{	 
-       								FILE* fptr=fopen("target_file1.xsm","w");
-									codeGenXsm($1, fptr);	
+									FILE* fptr;
+									if ( !(fptr = fopen("target_file.xsm", "w")) )
+    								{
+     								   perror("Opening output xsm file failed");
+    								   exit(-1);
+    								}
+       								
+									codeGenXsm($2, fptr);	
+									
 									fclose(fptr);
-	
 									exit(0);
 								}
-			| BEG END
+			| BEG END			{ 	printf("Empty program, exiting without generating a target file.\n");
+									exit(0);
+								}
 			;
 
 slist 		: slist stmt 		{
@@ -39,9 +51,9 @@ stmt 		: ReadStmt
 			| AsgnStmt
 			;
 
-ReadStmt 	: READ '(' VARIABLE ')' ';'		{ $$ = makeReadNode($1); }
+ReadStmt 	: READ '(' VARIABLE ')' ';'		{ $$ = makeReadNode($3); }
 			
-WriteStmt 	: WRITE '(' expr ')' ';'		{ $$ = makeWriteNode($1); }
+WriteStmt 	: WRITE '(' expr ')' ';'		{ $$ = makeWriteNode($3); }
 
 AsgnStmt 	: VARIABLE ASGN expr ';'		{ $$ = makeAssignmentNode($1, $3); }
 
@@ -56,9 +68,9 @@ expr	: expr PLUS expr		{ $$ = makeOperatorNode(PLUS, $1, $3); }
 
 %%
 
-int yyerror()
+void yyerror(const char *s)
 {
-	printf("Error");
+	printf("Error: %s", s);
 }
 
 int main()

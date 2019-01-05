@@ -4,4 +4,12 @@ cd build
 yacc -d ../simpleCalculator.y
 lex ../simpleCalculator.l
 gcc -g lex.yy.c y.tab.c exptree.c codegen.c
-./a.out
+
+set +e
+
+./a.out < ../testProgram.silc
+
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "ERROR: Compilation failed."
+fi
