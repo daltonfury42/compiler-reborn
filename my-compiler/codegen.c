@@ -6,6 +6,14 @@
 
 int freeRegister=0;
 
+int verbose = 1;
+
+void printDebug(const char* msg)
+{
+	if (verbose)
+		printf("DEBUG: %s.\n", msg);
+}
+
 int codeGen(struct tnode* t, FILE* target_file);
 
 //returns stackPos for variable
@@ -36,6 +44,8 @@ void freeReg()
 
 int codeGenOperator(struct tnode* t, FILE* target_file)
 {
+	printDebug("Started code generation for Operator");
+
 	int reg1 = codeGen(t->left, target_file);
 	int reg2 = codeGen(t->right, target_file);
 		
@@ -63,26 +73,40 @@ int codeGenOperator(struct tnode* t, FILE* target_file)
 	}
 		
 	freeReg();
+	
+	printDebug("Ended code generation for Operator");	
 	return reg1;
 }
 
 int codeGenNumber(struct tnode* t, FILE* target_file)
 {
+	printDebug("Started code generation for Number");
+
 	int reg = getReg();
 	fprintf(target_file, "MOV R%d, %d\n", reg, t->val);
+
+	printDebug("Ended code generation for Number");
+
 	return reg;
 }
 
 int codeGenVar(tnode* t, FILE* target_file)
 {
+	printDebug("Started code generation for Variable");
+
 	int varPos = getVarPos(t->varname);	//returns 4096+0 for a and so on
 	int reg0 = getReg();
 	fprintf(target_file, "MOV R%d, [%d]\n", reg0, varPos);
+
+	printDebug("Ended code generation for Variable");
+
 	return reg0;
 }
 
 int codeGenRead(struct tnode* t, FILE* target_file)
 {
+	printDebug("Started code generation for Read");
+
 	char varname = t->right->varname;
 	int varPos = getVarPos(varname);
 
@@ -105,11 +129,17 @@ int codeGenRead(struct tnode* t, FILE* target_file)
 
 	freeReg();
 
+	printDebug("Ended code generation for Read");
+
+
 	return -1;
 }
 
 int codeGenWrite(struct tnode* t, FILE* target_file)
 {
+
+	printDebug("Started code generation for Write");
+
 	int tmpreg = getReg();
 
 	fprintf(target_file, "MOV R%d, \"Write\"\n", tmpreg);		
@@ -132,11 +162,15 @@ int codeGenWrite(struct tnode* t, FILE* target_file)
 	freeReg();
 	freeReg();
 
+	printDebug("Ended code generation for Write");
+
+
 	return -1;
 }
 
 int codeGenConnector(struct tnode* t, FILE* target_file)
 {
+
 	codeGen(t->left, target_file);
 	codeGen(t->right, target_file);
 	
@@ -145,6 +179,9 @@ int codeGenConnector(struct tnode* t, FILE* target_file)
 
 int codeGenAsgn(struct tnode* t, FILE* target_file)
 {
+
+	printDebug("Started code generation for Asgn");
+
 	char varname = t->left->varname;
 	int varPos = getVarPos(varname);
 	
@@ -153,6 +190,9 @@ int codeGenAsgn(struct tnode* t, FILE* target_file)
 	fprintf(target_file, "MOV [%d], R%d\n ", varPos, reg1);
 
 	freeReg();
+
+	printDebug("Ended code generation for Asgn");
+
 
 	return -1;
 }
@@ -192,30 +232,22 @@ int codeGen(struct tnode* t, FILE* target_file)
 
 void codeGenXsm(struct tnode* t, FILE* target_file) 
 {
+	printDebug("Code genration started");
 	/* Header */
 	fprintf(target_file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n",0,2056,0,0,0,0,0,0); 
 
+	fprintf(target_file, "BRKP\n");
+	fprintf(target_file, "MOV SP, 4121\n");	
+	//4095 + 26 for storing variables. a is in [4095+1]
+	
 	int result = codeGen(t, target_file);
 	
-	fprintf(target_file, "MOV SP, 4096\n");
-	fprintf(target_file, "MOV [SP], R%d\n", result);
+	fprintf(target_file, "MOV R0, \"Exit\" \n");
+   	fprintf(target_file, "PUSH R0 \n");
+   	fprintf(target_file, "CALL 0 \n");
 
-	
-	fprintf(target_file, "MOV R0, \"Write\"\n");		
-   	fprintf(target_file, "PUSH R0 \n");  	
-   	fprintf(target_file, "MOV R0, -2 \n");
-   	fprintf(target_file, "PUSH R0 \n");
-   	fprintf(target_file, "MOV R0, [4096] \n");
-   	fprintf(target_file, "PUSH R0 \n");
-   	fprintf(target_file, "PUSH R0 \n");
-   	fprintf(target_file, "PUSH R0 \n");
-   	fprintf(target_file, "CALL 0 \n");
-   	fprintf(target_file, "POP R0 \n");
-   	fprintf(target_file, "POP R1 \n");
-   	fprintf(target_file, "POP R1 \n");
-   	fprintf(target_file, "POP R1 \n");
-   	fprintf(target_file, "POP R1 \n");
-   	fprintf(target_file, "MOV R0, \"Exit\" \n");
-   	fprintf(target_file, "PUSH R0 \n");
-   	fprintf(target_file, "CALL 0 \n");
+	if (freeRegister != 0)
+		printDebug("Memeory Leak!");
+
+	printDebug("Code generation ended");
 }
