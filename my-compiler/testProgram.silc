@@ -1,0 +1,6 @@
+begin 
+    a = 30;
+    b = 20;
+    read(c);
+    write((a+b)*c); 
+end
