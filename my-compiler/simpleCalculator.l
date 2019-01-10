@@ -7,12 +7,12 @@
 	
 %%
 
-"begin" { return BEG; }
-"end"	{ return END; }
-"read" 	{ return READ; }
-"write" { return WRITE; }
+"begin" 	{ return BEG; }
+"end"		{ return END; }
+"read" 		{ return READ; }
+"write" 	{ return WRITE; }
 	
-[0-9]+ 	{
+[0-9]+ 		{
 				int number = atoi(yytext); 
 				yylval = makeLeafNodeNum(number);	
 				return NUM;
@@ -23,15 +23,41 @@
 				return VARIABLE;
 			}
 
-"+" 	{ return PLUS; }
+"+" 		{ return PLUS; }
 
-"-" 	{ return MINUS; }
+"-" 		{ return MINUS; }
 
-"*" 	{ return MUL; }
+"*" 		{ return MUL; }
 
-"/" 	{ return DIV; }
+"/" 		{ return DIV; }
 
-"="		{ return ASGN; }
+"="			{ return ASGN; }
+
+">"			{ return GT; }
+
+">="		{ return GTE; }
+
+"<"			{ return LT; }
+
+"<="		{ return LTE; }
+
+"=="		{ return EQ; }
+
+"!="		{ return NEQ; }
+
+"if"		{ return IF; }
+
+"then"		{ return THEN; }
+
+"else"		{ return ELSE; }
+
+"endif"		{ return ENDIF; }
+
+"while"		{ return WHILE; }
+
+"do"		{ return DO; }
+
+"endwhile"	{ return ENDWHILE; }
 
 [ \t\n] 	{ }
 
