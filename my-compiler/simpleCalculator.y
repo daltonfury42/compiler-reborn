@@ -15,8 +15,11 @@
 %error-verbose
 
 %token CONNECTOR READ WRITE VARIABLE ASGN BEG END NUM OPERATOR 
+
 %token IF THEN ELSE ENDIF WHILE DO ENDWHILE
-%token GT GTE LT LTE EQ NEQ
+
+%left GT GTE LT LTE EQ NEQ
+
 %left PLUS MINUS
 %left DIV MUL
 
@@ -63,15 +66,15 @@ expr		: expr PLUS expr				{ $$ = makeOperatorNode(PLUS, $1, $3); }
 			| expr MINUS expr				{ $$ = makeOperatorNode(MINUS, $1, $3); }
 			| expr MUL expr					{ $$ = makeOperatorNode(MUL, $1, $3); }
 			| expr DIV expr					{ $$ = makeOperatorNode(DIV, $1, $3); }
-			| '(' expr ')'	 				{ $$ = $2; }
-			| NUM							{ $$ = $1; }	// Node made in .l file
-			| VARIABLE						{ $$ = $1; }
 			| expr GT expr					{ $$ = makeOperatorNode(GT, $1, $3); }
 			| expr GTE expr					{ $$ = makeOperatorNode(GTE, $1, $3); }
 			| expr LT expr					{ $$ = makeOperatorNode(LT, $1, $3); }
 			| expr LTE expr					{ $$ = makeOperatorNode(LTE, $1, $3); }
 			| expr EQ expr					{ $$ = makeOperatorNode(EQ, $1, $3); }
 			| expr NEQ expr					{ $$ = makeOperatorNode(NEQ, $1, $3); }
+			| '(' expr ')'	 				{ $$ = $2; }
+			| NUM							{ $$ = $1; }	// Node made in .l file
+			| VARIABLE						{ $$ = $1; }
 			;
 
 IfStmt 		: IF '(' expr ')' THEN slist ELSE slist ENDIF 	{ $$ = makeIfNode($3, $6, $8); }

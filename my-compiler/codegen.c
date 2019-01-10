@@ -28,7 +28,7 @@ int getReg()
 	if(freeRegister > 19)
 		{
 			printf("Reg overflow");
-			exit(1);
+			exit(-1);
 		}
 		
 	return freeRegister++;
@@ -40,6 +40,12 @@ void freeReg()
 		return;
 	freeRegister--;
 
+}
+
+int getLabel()
+{
+	static int label = 0;
+	return label++;
 }
 
 int codeGenOperator(struct tnode* t, FILE* target_file)
@@ -66,10 +72,27 @@ int codeGenOperator(struct tnode* t, FILE* target_file)
 		case DIV:	
 			fprintf(target_file, "DIV R%d, R%d\n", reg1, reg2);
 			break;
-			
+		case GTE:	
+				fprintf(target_file, "GE R%d, R%d\n", reg1, reg2);
+				break;
+		case GT:	
+				fprintf(target_file, "GT R%d, R%d\n", reg1, reg2);
+				break;
+		case LTE:	
+				fprintf(target_file, "LE R%d, R%d\n", reg1, reg2);
+				break;
+		case LT:	
+				fprintf(target_file, "LT R%d, R%d\n", reg1, reg2);
+				break;
+		case EQ:	
+				fprintf(target_file, "EQ R%d, R%d\n", reg1, reg2);
+				break;
+		case NEQ:	
+				fprintf(target_file, "NE R%d, R%d\n", reg1, reg2);
+				break;
 		default: 	
-			printf("INVALID OPERATOR");
-			exit(1);				
+			printf("INVALID OPERATOR\n");
+			exit(-1);				
 	}
 		
 	freeReg();
@@ -197,6 +220,62 @@ int codeGenAsgn(struct tnode* t, FILE* target_file)
 	return -1;
 }
 
+
+int codeGenIf(struct tnode* t, FILE* target_file)
+{
+
+	printDebug("Started code generation for If");
+
+	int label_end = getLabel();
+	int label_else = getLabel();
+
+	int reg_guard = codeGen(t->left, target_file);
+
+	fprintf(target_file, "JZ R%d, L%d\n", reg_guard, label_else);
+
+	codeGen(t->right, target_file);
+	fprintf(target_file, "JMP L%d\n", label_end);
+
+	fprintf(target_file, "L%d:\n", label_else);
+	
+	if (t->elseTree != NULL)
+	{
+		codeGen(t->elseTree, target_file);
+	}
+
+	fprintf(target_file, "L%d:\n", label_end);
+
+	freeReg();
+
+	printDebug("Ended code generation for If");
+
+	return -1;
+}
+
+int codeGenWhile(struct tnode* t, FILE* target_file)
+{
+
+	printDebug("Started code generation for While");
+
+	int label_begin = getLabel();
+	int label_end = getLabel();
+
+	fprintf(target_file, "L%d:\n", label_begin);
+	int reg_guard = codeGen(t->left, target_file);
+	fprintf(target_file, "JZ R%d, L%d\n", reg_guard, label_end);
+	
+	codeGen(t->right, target_file);
+	
+	fprintf(target_file, "JMP L%d\n", label_begin);
+	fprintf(target_file, "L%d:\n", label_end);
+
+	freeReg();
+
+	printDebug("Ended code generation for While");
+
+	return -1;
+}
+
 int codeGen(struct tnode* t, FILE* target_file)
 {
 	int reg;
@@ -224,8 +303,14 @@ int codeGen(struct tnode* t, FILE* target_file)
 		case ASGN:
 			codeGenAsgn(t, target_file);
 			return -1;
+		case IF:
+			codeGenIf(t, target_file);
+			return -1;
+		case WHILE:
+			codeGenWhile(t, target_file);
+			return -1;
 		default:
-			printf("Invalid nodetype.\n");
+			printf("Invalid nodetype: %d.\n", t->nodetype);
 			exit(-1);
 	}
 }
@@ -247,7 +332,7 @@ void codeGenXsm(struct tnode* t, FILE* target_file)
    	fprintf(target_file, "CALL 0 \n");
 
 	if (freeRegister != 0)
-		printDebug("Memeory Leak!");
+		printDebug("Register Leaks!");
 
 	printDebug("Code generation ended");
 }

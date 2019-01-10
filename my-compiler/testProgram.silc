@@ -1,6 +1,21 @@
 begin 
-    a = 30;
-    b = 20;
-    read(c);
-    write((a+b)*c); 
+    a = 1;
+    read(b);
+    write((a+b)*b);
+
+    while(a < b) do
+        write(a);
+
+        if(a < 5) then
+            write(0);
+        else
+            write(1);
+        endif
+
+        if (a == b - 1) then
+            write(100);
+        endif
+
+        a = a + 1;
+    endwhile 
 end
