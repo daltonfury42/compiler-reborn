@@ -5,6 +5,8 @@
   #include "codegen.h"
 
   int yylex(void);
+  int ltlex(void);
+  extern FILE* ltin;
 
   void yyerror(const char *s);
 
@@ -27,15 +29,26 @@
 
 program 	: BEG slist END 	{	 
 									FILE* fptr;
-									if ( !(fptr = fopen("target_file.xsm", "w")) )
+									if ( !(fptr = fopen("tmp_file.xsm", "w")) )
     								{
      								   perror("Opening output xsm file failed");
     								   exit(-1);
     								}
        								
+									// Code Generate
 									codeGenXsm($2, fptr);	
 									
 									fclose(fptr);
+
+									// Label Translate
+									if ( !(ltin = fopen("tmp_file.xsm", "r")) )
+    								{
+     								   perror("Opening output xsm file failed");
+    								   exit(-1);
+    								}
+
+									ltlex();
+
 									exit(0);
 								}
 			| BEG END			{ 	printf("Empty program, exiting without generating a target file.\n");

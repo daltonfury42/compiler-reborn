@@ -210,7 +210,7 @@ int codeGenAsgn(struct tnode* t, FILE* target_file)
 	
 	int reg1 = codeGen(t->right, target_file);
 	
-	fprintf(target_file, "MOV [%d], R%d\n ", varPos, reg1);
+	fprintf(target_file, "MOV [%d], R%d\n", varPos, reg1);
 
 	freeReg();
 
