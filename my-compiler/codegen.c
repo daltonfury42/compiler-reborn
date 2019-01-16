@@ -4,7 +4,7 @@
 #include "exptree.h"
 #include "codegen.h"
 
-int varMem[26];
+int freeRegister=0;
 
 int verbose = 1;
 
@@ -20,7 +20,32 @@ int codeGen(struct tnode* t, FILE* target_file);
 int getVarPos(char ch)
 {
 	int index=ch-'a';
-	return index;
+	return 4096+index;
+}
+
+int getReg()
+{
+	if(freeRegister > 19)
+		{
+			printf("Reg overflow");
+			exit(-1);
+		}
+		
+	return freeRegister++;
+}
+
+void freeReg()
+{
+	if(freeRegister==0)
+		return;
+	freeRegister--;
+
+}
+
+int getLabel()
+{
+	static int label = 0;
+	return label++;
 }
 
 int codeGenOperator(struct tnode* t, FILE* target_file)
@@ -33,24 +58,41 @@ int codeGenOperator(struct tnode* t, FILE* target_file)
 	switch(t->operator)
 	{
 		case PLUS:	
-			return reg1 + reg2;
+			fprintf(target_file, "ADD R%d, R%d\n", reg1, reg2);
 			break;
 			
 		case MINUS:	
-			return reg1 - reg2;
+			fprintf(target_file, "SUB R%d, R%d\n", reg1, reg2);
 			break;
 			
 		case MUL:	
-			return reg1 * reg2;
+			fprintf(target_file, "MUL R%d, R%d\n", reg1, reg2);
 			break;
 			
 		case DIV:	
-			return reg1 / reg2;
+			fprintf(target_file, "DIV R%d, R%d\n", reg1, reg2);
 			break;
-			
+		case GTE:	
+				fprintf(target_file, "GE R%d, R%d\n", reg1, reg2);
+				break;
+		case GT:	
+				fprintf(target_file, "GT R%d, R%d\n", reg1, reg2);
+				break;
+		case LTE:	
+				fprintf(target_file, "LE R%d, R%d\n", reg1, reg2);
+				break;
+		case LT:	
+				fprintf(target_file, "LT R%d, R%d\n", reg1, reg2);
+				break;
+		case EQ:	
+				fprintf(target_file, "EQ R%d, R%d\n", reg1, reg2);
+				break;
+		case NEQ:	
+				fprintf(target_file, "NE R%d, R%d\n", reg1, reg2);
+				break;
 		default: 	
-			printf("INVALID OPERATOR");
-			exit(1);				
+			printf("INVALID OPERATOR\n");
+			exit(-1);				
 	}
 		
 	freeReg();
@@ -63,7 +105,8 @@ int codeGenNumber(struct tnode* t, FILE* target_file)
 {
 	printDebug("Started code generation for Number");
 
-	int reg = t->val;
+	int reg = getReg();
+	fprintf(target_file, "MOV R%d, %d\n", reg, t->val);
 
 	printDebug("Ended code generation for Number");
 
@@ -75,8 +118,9 @@ int codeGenVar(tnode* t, FILE* target_file)
 	printDebug("Started code generation for Variable");
 
 	int varPos = getVarPos(t->varname);	//returns 4096+0 for a and so on
-	int reg0 = varMem[varPos];
-	
+	int reg0 = getReg();
+	fprintf(target_file, "MOV R%d, [%d]\n", reg0, varPos);
+
 	printDebug("Ended code generation for Variable");
 
 	return reg0;
@@ -89,11 +133,27 @@ int codeGenRead(struct tnode* t, FILE* target_file)
 	char varname = t->right->varname;
 	int varPos = getVarPos(varname);
 
-	int temp;
-	scanf("%d", &temp);
-	varMem[varPos] = temp;
+	int tmpreg = getReg();
+
+	fprintf(target_file, "MOV R%d, \"Read\"\n", tmpreg);		
+	fprintf(target_file, "PUSH R%d \n", tmpreg);  	
+	fprintf(target_file, "MOV R%d, -1 \n", tmpreg);
+	fprintf(target_file, "PUSH R%d \n", tmpreg);
+	fprintf(target_file, "MOV R%d, %d \n", tmpreg, varPos);
+	fprintf(target_file, "PUSH R%d \n", tmpreg);
+	fprintf(target_file, "PUSH R%d \n", tmpreg);
+	fprintf(target_file, "PUSH R%d \n", tmpreg);
+	fprintf(target_file, "CALL 0 \n");
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+
+	freeReg();
 
 	printDebug("Ended code generation for Read");
+
 
 	return -1;
 }
@@ -103,10 +163,27 @@ int codeGenWrite(struct tnode* t, FILE* target_file)
 
 	printDebug("Started code generation for Write");
 
+	int tmpreg = getReg();
+
+	fprintf(target_file, "MOV R%d, \"Write\"\n", tmpreg);		
+	fprintf(target_file, "PUSH R%d \n", tmpreg);  	
+	fprintf(target_file, "MOV R%d, -2 \n", tmpreg);
+	fprintf(target_file, "PUSH R%d \n", tmpreg);
 
 	int reg1 = codeGen(t->right, target_file);
 
-	printf("%d", reg1);
+	fprintf(target_file, "PUSH R%d \n", reg1);
+	fprintf(target_file, "PUSH R%d \n", tmpreg);
+	fprintf(target_file, "PUSH R%d \n", tmpreg);
+	fprintf(target_file, "CALL 0 \n");
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	fprintf(target_file, "POP R%d \n", tmpreg);
+	
+	freeReg();
+	freeReg();
 
 	printDebug("Ended code generation for Write");
 
@@ -133,9 +210,68 @@ int codeGenAsgn(struct tnode* t, FILE* target_file)
 	
 	int reg1 = codeGen(t->right, target_file);
 	
-	varMem[varPos] = reg1;
+	fprintf(target_file, "MOV [%d], R%d\n", varPos, reg1);
+
+	freeReg();
 
 	printDebug("Ended code generation for Asgn");
+
+
+	return -1;
+}
+
+
+int codeGenIf(struct tnode* t, FILE* target_file)
+{
+
+	printDebug("Started code generation for If");
+
+	int label_end = getLabel();
+	int label_else = getLabel();
+
+	int reg_guard = codeGen(t->left, target_file);
+
+	fprintf(target_file, "JZ R%d, L%d\n", reg_guard, label_else);
+
+	codeGen(t->right, target_file);
+	fprintf(target_file, "JMP L%d\n", label_end);
+
+	fprintf(target_file, "L%d:\n", label_else);
+	
+	if (t->elseTree != NULL)
+	{
+		codeGen(t->elseTree, target_file);
+	}
+
+	fprintf(target_file, "L%d:\n", label_end);
+
+	freeReg();
+
+	printDebug("Ended code generation for If");
+
+	return -1;
+}
+
+int codeGenWhile(struct tnode* t, FILE* target_file)
+{
+
+	printDebug("Started code generation for While");
+
+	int label_begin = getLabel();
+	int label_end = getLabel();
+
+	fprintf(target_file, "L%d:\n", label_begin);
+	int reg_guard = codeGen(t->left, target_file);
+	fprintf(target_file, "JZ R%d, L%d\n", reg_guard, label_end);
+	
+	codeGen(t->right, target_file);
+	
+	fprintf(target_file, "JMP L%d\n", label_begin);
+	fprintf(target_file, "L%d:\n", label_end);
+
+	freeReg();
+
+	printDebug("Ended code generation for While");
 
 	return -1;
 }
@@ -167,8 +303,14 @@ int codeGen(struct tnode* t, FILE* target_file)
 		case ASGN:
 			codeGenAsgn(t, target_file);
 			return -1;
+		case IF:
+			codeGenIf(t, target_file);
+			return -1;
+		case WHILE:
+			codeGenWhile(t, target_file);
+			return -1;
 		default:
-			printf("Invalid nodetype.\n");
+			printf("Invalid nodetype: %d.\n", t->nodetype);
 			exit(-1);
 	}
 }
@@ -177,7 +319,20 @@ void codeGenXsm(struct tnode* t, FILE* target_file)
 {
 	printDebug("Code genration started");
 	/* Header */
+	fprintf(target_file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n",0,2056,0,0,0,0,0,0); 
+
+	fprintf(target_file, "BRKP\n");
+	fprintf(target_file, "MOV SP, 4121\n");	
+	//4095 + 26 for storing variables. a is in [4095+1]
+	
 	int result = codeGen(t, target_file);
 	
+	fprintf(target_file, "MOV R0, \"Exit\" \n");
+   	fprintf(target_file, "PUSH R0 \n");
+   	fprintf(target_file, "CALL 0 \n");
+
+	if (freeRegister != 0)
+		printDebug("Register Leaks!");
+
 	printDebug("Code generation ended");
 }
