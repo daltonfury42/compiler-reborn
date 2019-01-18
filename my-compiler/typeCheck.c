@@ -12,9 +12,27 @@ void typeError(char* s)
     exit(-2);
 }
 
+int typeOf(tnode* t)
+{
+    if(t->nodetype == VARIABLE)
+    {
+        if(t->symbolTableEntry == NULL)
+        {
+            printf("Error: Undeclared variable %s in line %d.\n", t->varname, lineNumber);
+            exit(-1);
+        }
+        
+        return t->symbolTableEntry->type;
+    }
+    else
+    {
+        return t->type;
+    }
+}
+
 void typeCheckRead(tnode* t)
 {
-    if(t->right->type != T_NUM)
+    if(typeOf(t->right) != T_NUM)
     {
         typeError("read type mismatch");
     }
@@ -22,7 +40,7 @@ void typeCheckRead(tnode* t)
 
 void typeCheckWrite(tnode* t)
 {
-    if(t->right->type != T_NUM)
+    if(typeOf(t->right) != T_NUM && typeOf(t->right) != T_STR)
     {
         typeError("write type mismatch");
     }
@@ -30,7 +48,7 @@ void typeCheckWrite(tnode* t)
 
 void typeCheckAssignment(tnode* t)
 {
-    if(t->left->type != t->right->type || t->right->type == -1)
+    if(typeOf(t->left) != typeOf(t->right) || typeOf(t->right) == -1)
     {
         typeError("Assignment type mismatch");
     }
@@ -38,7 +56,7 @@ void typeCheckAssignment(tnode* t)
 
 void typeCheckOperator(tnode* t)
 {
-    if(t->left->type != T_NUM || t->right->type != T_NUM)
+    if(typeOf(t->left) != T_NUM || typeOf(t->right) != T_NUM)
     {
         typeError("Left and right expressions of operators should be numer type");
     }
@@ -66,7 +84,7 @@ void typeCheckOperator(tnode* t)
 
 void typeCheckIf(tnode* t)
 {
-    if(t->left->type != T_BOOL)
+    if(typeOf(t->left) != T_BOOL)
     {
         typeError("If guard should be of type bool.");
     }   
@@ -75,7 +93,7 @@ void typeCheckIf(tnode* t)
 
 void typeCheckWhile(tnode* t)
 {
-    if(t->left->type != T_BOOL)
+    if(typeOf(t->left) != T_BOOL)
     {
         typeError("While guard should be of type bool.");
     }

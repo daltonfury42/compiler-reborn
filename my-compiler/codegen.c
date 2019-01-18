@@ -16,11 +16,9 @@ void printDebug(const char* msg)
 
 int codeGen(struct tnode* t, FILE* target_file);
 
-//returns stackPos for variable
-int getVarPos(char ch)
+int getVarAddr(tnode* t)
 {
-	int index=ch-'a';
-	return 4096+index;
+	return t->symbolTableEntry->binding;
 }
 
 int getReg()
@@ -113,11 +111,23 @@ int codeGenNumber(struct tnode* t, FILE* target_file)
 	return reg;
 }
 
+int codeGenStr(struct tnode* t, FILE* target_file)
+{
+	printDebug("Started code generation for String");
+
+	int reg = getReg();
+	fprintf(target_file, "MOV R%d, %s\n", reg, t->varname);
+
+	printDebug("Ended code generation for String");
+
+	return reg;
+}
+
 int codeGenVar(tnode* t, FILE* target_file)
 {
 	printDebug("Started code generation for Variable");
 
-	int varPos = getVarPos(t->varname);	//returns 4096+0 for a and so on
+	int varPos = getVarAddr(t);	
 	int reg0 = getReg();
 	fprintf(target_file, "MOV R%d, [%d]\n", reg0, varPos);
 
@@ -130,8 +140,7 @@ int codeGenRead(struct tnode* t, FILE* target_file)
 {
 	printDebug("Started code generation for Read");
 
-	char varname = t->right->varname;
-	int varPos = getVarPos(varname);
+	int varPos = getVarAddr(t->right);
 
 	int tmpreg = getReg();
 
@@ -205,8 +214,7 @@ int codeGenAsgn(struct tnode* t, FILE* target_file)
 
 	printDebug("Started code generation for Asgn");
 
-	char varname = t->left->varname;
-	int varPos = getVarPos(varname);
+	int varPos = getVarAddr(t->left);
 	
 	int reg1 = codeGen(t->right, target_file);
 	
@@ -284,6 +292,9 @@ int codeGen(struct tnode* t, FILE* target_file)
 	{	
 		case NUM:
 			reg = codeGenNumber(t, target_file);
+			return reg;
+		case STR:
+			reg = codeGenStr(t, target_file);
 			return reg;
 		case OPERATOR:
 			reg = codeGenOperator(t, target_file);

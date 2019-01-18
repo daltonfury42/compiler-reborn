@@ -4,6 +4,7 @@
   #include "exptree.h"
   #include "codegen.h"
   #include "typeCheck.h"
+  #include "symbolTable.h"
 
   int yylex(void);
   int ltlex(void);
@@ -15,13 +16,15 @@
 
   extern int lineNumber;
 
+  int currentType;
+
 %}
 
 %error-verbose
 
-%token CONNECTOR READ WRITE VARIABLE ASGN BEG END NUM OPERATOR 
+%token CONNECTOR READ WRITE VARIABLE ASGN BEG END DECL ENDDECL NUM STR OPERATOR 
 
-%token T_NUM T_BOOL
+%token T_NUM T_BOOL T_STR
 
 %token IF THEN ELSE ENDIF WHILE DO ENDWHILE
 
@@ -32,7 +35,29 @@
 
 %%
 
-program 	: BEG slist END 	{	 
+program		: globalDeclarations code			{}
+			;
+
+globalDeclarations 	: DECL DeclList ENDDECL 	{}
+					| DECL ENDDECL				{}
+					;
+
+DeclList 			: DeclList Decl 			{}
+					| Decl						{}
+					;
+
+Decl 				: Type VarList ';'			{}
+					;
+
+Type 				: T_NUM 					{ currentType = T_NUM; }
+					| T_STR						{ currentType = T_STR; }
+					;
+
+VarList 			: VarList ',' VARIABLE 			{ Ginstall($3->varname, currentType, 1); }
+					| VARIABLE						{ Ginstall($1->varname, currentType, 1); }
+					;
+
+code 				: BEG slist END {	 
 									FILE* fptr;
 									if ( !(fptr = fopen("tmp_file.xsm", "w")) )
     								{
@@ -124,8 +149,11 @@ expr		: expr PLUS expr				{ $$ = makeOperatorNode(PLUS, $1, $3);
 			| NUM							{ $$ = $1; // Node made in .l file
 											  $$->type = T_NUM;
 											}	
+			| STR							{
+											  $$ = $1;
+											  $$->type = T_STR;
+											}
 			| VARIABLE						{ $$ = $1; 
-											  $$->type = T_NUM;
 											}
 			;
 

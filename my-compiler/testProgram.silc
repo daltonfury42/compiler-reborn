@@ -1,4 +1,13 @@
+decl
+    number a, b;
+    string str;
+enddecl
+
 begin 
+
+    str = "HiWorld";
+    write(str);
+
     a = 1;
     read(b);
     write((a+b)*b);

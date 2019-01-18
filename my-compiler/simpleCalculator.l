@@ -15,16 +15,15 @@
 "end"		{ return END; }
 "read" 		{ return READ; }
 "write" 	{ return WRITE; }
+"number"	{ return T_NUM; }
+"string"	{ return T_STR; }
+"decl"		{ return DECL; }
+"enddecl"	{ return ENDDECL; }
 	
 [0-9]+ 		{
 				int number = atoi(yytext); 
 				yylval = makeLeafNodeNum(number);	
 				return NUM;
-			}
-
-[a-zA-Z] 	{
-				yylval = makeLeafNodeVar(*yytext);
-				return VARIABLE;
 			}
 
 "+" 		{ return PLUS; }
@@ -63,14 +62,24 @@
 
 "endwhile"	{ return ENDWHILE; }
 
+["][^"]*["]	{
+				yylval = makeLeafNodeStringConst(yytext);
+				return STR;
+			}
+
 [ \t] 		{ }
 
 [\n]		{ lineNumber++; }
 
-[();] 		{ return *yytext; }
+[(),;] 		{ return *yytext; }
 
-		. 	{ 
-				yyerror("unknown character\n");
+[a-zA-Z_][a-zA-Z0-9_]* 	{
+							yylval = makeLeafNodeVar(yytext);
+							return VARIABLE;
+						}
+
+. 			{ 
+				yyerror("Unknown character. Please add any new characters to the lex file\n");
 				exit(1);
 			}
 	
