@@ -79,7 +79,7 @@ tnode* makeLeafNodeStringConst(char* stringContent)
 	char* stringVal = malloc(strlen(stringContent));
 
 	//stripping yytext of the quotes while copying
-	strncpy(stringVal, stringContent, strlen(stringContent)+1);
+	strncpy(stringVal, stringContent, strlen(stringContent) + 1);
 
 	return createTree(-1, stringVal, -1, STR, NULL, NULL, NULL);
 }

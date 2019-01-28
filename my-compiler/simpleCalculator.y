@@ -11,6 +11,7 @@
   extern FILE* ltin;
 
   void yyerror(const char *s);
+	void initCompile(tnode* root);
 
   #define YYSTYPE tnode* 
 
@@ -39,65 +40,46 @@ program		: globalDeclarations code			{}
 			;
 
 globalDeclarations 	: DECL DeclList ENDDECL 	{}
-					| DECL ENDDECL				{}
+					| DECL ENDDECL					{}
 					;
 
-DeclList 			: DeclList Decl 			{}
-					| Decl						{}
+DeclList 	: DeclList Decl 				{}
+					| Decl									{}
 					;
 
-Decl 				: Type VarList ';'			{}
+Decl 				: Type VarList ';'		{}
 					;
 
-Type 				: T_NUM 					{ currentType = T_NUM; }
-					| T_STR						{ currentType = T_STR; }
+Type 			: T_NUM		 							{ currentType = T_NUM; }
+					| T_STR									{ currentType = T_STR; }
 					;
 
-VarList 			: VarList ',' VARIABLE 			{ Ginstall($3->varname, currentType, 1); }
-					| VARIABLE						{ Ginstall($1->varname, currentType, 1); }
+VarList 	: VarList ',' VarDecl 	{}
+					| VarDecl								{}
 					;
 
-code 				: BEG slist END {	 
-									FILE* fptr;
-									if ( !(fptr = fopen("tmp_file.xsm", "w")) )
-    								{
-     								   perror("Opening output xsm file failed");
-    								   exit(-1);
-    								}
-       								
-									// Code Generate
-									codeGenXsm($2, fptr);	
-									
-									fclose(fptr);
+VarDecl		: VARIABLE 							{ Ginstall($1->varname, currentType, 1); }
+					: VARIABLE '[' NUM ']'  { Ginstall($1->varname, currentType, $3->val); }
 
-									// Label Translate
-									if ( !(ltin = fopen("tmp_file.xsm", "r")) )
-    								{
-     								   perror("Opening output xsm file failed");
-    								   exit(-1);
-    								}
+code			: BEG slist END 				{	initCompile($2); }
+					| BEG END								{ 		
+																		printf("Empty program, exiting without generating a target file.\n");
+																		exit(0);
+																	}
+					;
 
-									ltlex();
+slist 		: slist stmt 						{
+																		$$ = makeConnectorNode($1, $2);
+																	}
+					| stmt									{ $$ = $1; }
+					;
 
-									exit(0);
-								}
-			| BEG END			{ 	printf("Empty program, exiting without generating a target file.\n");
-									exit(0);
-								}
-			;
-
-slist 		: slist stmt 		{
-									$$ = makeConnectorNode($1, $2);
-								}
-			| stmt				{ $$ = $1; }
-			;
-
-stmt 		: ReadStmt
-			| WriteStmt		
-			| AsgnStmt
-			| IfStmt
-			| WhileStmt
-			;
+stmt 			: ReadStmt
+					| WriteStmt		
+					| AsgnStmt
+					| IfStmt
+					| WhileStmt
+					;
 
 ReadStmt 	: READ '(' VARIABLE ')' ';'		{ 
 											  $3->type = T_NUM;
@@ -105,7 +87,7 @@ ReadStmt 	: READ '(' VARIABLE ')' ';'		{
 											  typeCheckRead($$);
 					 						}
 			
-WriteStmt 	: WRITE '(' expr ')' ';'		{ $$ = makeWriteNode($3); 
+WriteStmt : WRITE '(' expr ')' ';'		{ $$ = makeWriteNode($3); 
 											  typeCheckWrite($$);
 											}
 
@@ -115,59 +97,59 @@ AsgnStmt 	: VARIABLE ASGN expr ';'		{
 											  typeCheckAssignment($$);
 											}
 
-expr		: expr PLUS expr				{ $$ = makeOperatorNode(PLUS, $1, $3); 
+expr	: expr PLUS expr{ $$ = makeOperatorNode(PLUS, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr MINUS expr				{ $$ = makeOperatorNode(MINUS, $1, $3); 
+			| expr MINUS expr{$$ = makeOperatorNode(MINUS, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr MUL expr					{ $$ = makeOperatorNode(MUL, $1, $3); 
+			| expr MUL expr	{ $$ = makeOperatorNode(MUL, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr DIV expr					{ $$ = makeOperatorNode(DIV, $1, $3); 
+			| expr DIV expr	{ $$ = makeOperatorNode(DIV, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr GT expr					{ $$ = makeOperatorNode(GT, $1, $3); 
+			| expr GT expr	{ $$ = makeOperatorNode(GT, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr GTE expr					{ $$ = makeOperatorNode(GTE, $1, $3); 
+			| expr GTE expr	{ $$ = makeOperatorNode(GTE, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr LT expr					{ $$ = makeOperatorNode(LT, $1, $3); 
+			| expr LT expr	{ $$ = makeOperatorNode(LT, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr LTE expr					{ $$ = makeOperatorNode(LTE, $1, $3); 
+			| expr LTE expr	{ $$ = makeOperatorNode(LTE, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr EQ expr					{ $$ = makeOperatorNode(EQ, $1, $3); 
+			| expr EQ expr	{ $$ = makeOperatorNode(EQ, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| expr NEQ expr					{ $$ = makeOperatorNode(NEQ, $1, $3); 
+			| expr NEQ expr	{ $$ = makeOperatorNode(NEQ, $1, $3); 
 											  typeCheckOperator($$);
 											}
-			| '(' expr ')'	 				{ $$ = $2; }
-			| NUM							{ $$ = $1; // Node made in .l file
+			| '(' expr ')'	{ $$ = $2; }
+			| NUM						{ $$ = $1; // Node made in .l file
 											  $$->type = T_NUM;
 											}	
-			| STR							{
+			| STR						{
 											  $$ = $1;
 											  $$->type = T_STR;
 											}
-			| VARIABLE						{ $$ = $1; 
+			| VARIABLE			{ $$ = $1; 
 											}
 			;
 
 IfStmt 		: IF '(' expr ')' THEN slist ELSE slist ENDIF 	{ $$ = makeIfNode($3, $6, $8); 
-															  typeCheckIf($$);
-															}
-			| IF '(' expr ')' THEN slist ENDIF				{ $$ = makeIfNode($3, $6, NULL); 
-															  typeCheckIf($$);
-															}
+															  														typeCheckIf($$);
+																													}
+			| IF '(' expr ')' THEN slist ENDIF									{ $$ = makeIfNode($3, $6, NULL); 
+																														typeCheckIf($$);
+																													}
 			;
 
-WhileStmt 	: WHILE '(' expr ')' DO slist ENDWHILE			{ $$ = makeWhileNode($3, $6); 
-															  typeCheckWhile($$);
-															}
+WhileStmt 	: WHILE '(' expr ')' DO slist ENDWHILE				{ $$ = makeWhileNode($3, $6); 
+															  														typeCheckWhile($$);
+																													}
 			;
 
 %%
@@ -181,4 +163,30 @@ int main()
 {
   	yyparse();
   	return 1;
+}
+
+void initCompile(tnode* root)
+{
+	FILE* fptr;
+	if ( !(fptr = fopen("tmp_file.xsm", "w")) )
+	{
+  	perror("Opening output xsm file failed");
+ 	  exit(-1);
+  }
+       								
+	// Code Generate
+	codeGenXsm(root, fptr);	
+									
+	fclose(fptr);
+
+	// Label Translate
+	if ( !(ltin = fopen("tmp_file.xsm", "r")) )
+  {
+    perror("Opening output xsm file failed");
+    exit(-1);
+  }
+
+	ltlex();
+
+	exit(0);
 }
