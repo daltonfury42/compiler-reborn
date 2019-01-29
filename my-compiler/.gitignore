@@ -9,3 +9,4 @@ disk.xfs
 target_file.out
 tmp_file.xsm
 lex.lt.c
+build/xsm_expl/xfs-interface/tempfile*

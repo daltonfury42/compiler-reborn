@@ -81,8 +81,7 @@ stmt 			: ReadStmt
 					| WhileStmt
 					;
 
-ReadStmt 	: READ '(' VARIABLE ')' ';'		{ 
-											  $3->type = T_NUM;
+ReadStmt 	: READ '(' VARIABLE ')' ';'		{
 											  $$ = makeReadNode($3);
 											  typeCheckRead($$);
 					 						}
@@ -92,7 +91,6 @@ WriteStmt : WRITE '(' expr ')' ';'		{ $$ = makeWriteNode($3);
 											}
 
 AsgnStmt 	: VARIABLE ASGN expr ';'		{
-	 										  $1->type = T_NUM;
 											  $$ = makeAssignmentNode($1, $3); 
 											  typeCheckAssignment($$);
 											}
@@ -129,11 +127,9 @@ expr	: expr PLUS expr{ $$ = makeOperatorNode(PLUS, $1, $3);
 											}
 			| '(' expr ')'	{ $$ = $2; }
 			| NUM						{ $$ = $1; // Node made in .l file
-											  $$->type = T_NUM;
 											}	
 			| STR						{
 											  $$ = $1;
-											  $$->type = T_STR;
 											}
 			| VARIABLE			{ $$ = $1; 
 											}
