@@ -83,3 +83,9 @@ tnode* makeLeafNodeStringConst(char* stringContent)
 
 	return createTree(-1, T_STR, stringVal, -1, STR, NULL, NULL, NULL);
 }
+
+
+tnode* makeArrayNode(tnode* l, tnode* r) 
+{
+	return createTree(-1, -1, NULL, -1, ARRAY, l, r, NULL);
+}

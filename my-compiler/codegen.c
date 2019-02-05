@@ -5,7 +5,8 @@
 #include "codegen.h"
 
 int freeRegister=0;
-
+int getReg();
+void freeReg();
 int verbose = 1;
 
 void printDebug(const char* msg)
@@ -14,16 +15,56 @@ void printDebug(const char* msg)
 		printf("DEBUG: %s.\n", msg);
 }
 
+void saveAllReg(FILE* target_file)
+{
+	for(int i = 0; i < freeRegister; i++)
+	{
+		fprintf(target_file, "PUSH R%d\n", i);
+	}
+}
+
+void restoreAllReg(FILE* target_file)
+{
+	for(int i = freeRegister - 1; i >= 0; i--)
+	{
+		fprintf(target_file, "POP R%d\n", i);
+	}
+}
+
 int codeGen(struct tnode* t, FILE* target_file);
 
-int getVarAddr(tnode* t)
+int getVarAddr(tnode* t, FILE* target_file)
 {
-	return t->symbolTableEntry->binding;
+	printDebug("Started getVarAddr");
+
+	int reg0 = getReg();
+
+	if(t->nodetype == VARIABLE)
+		fprintf(target_file, "MOV R%d, %d\n", reg0, t->symbolTableEntry->binding);
+	else if (t->nodetype == ARRAY)
+	{
+		fprintf(target_file, "MOV R%d, %d\n", reg0, t->left->symbolTableEntry->binding);
+		
+		int reg1 = codeGen(t->right, target_file);
+		
+		fprintf(target_file, "ADD R%d, R%d\n", reg0, reg1);
+
+		freeReg();
+	}
+	else
+	{
+		printf("Control should not reach here. \n");
+		exit(-1);
+	}
+
+	printDebug("Started getVarAddr");
+	
+	return reg0;
 }
 
 int getReg()
 {
-	if(freeRegister > 19)
+	if(freeRegister > 15)
 		{
 			printf("Reg overflow");
 			exit(-1);
@@ -35,7 +76,10 @@ int getReg()
 void freeReg()
 {
 	if(freeRegister==0)
-		return;
+	{
+		printf("Too many invocations of freeReg.\n");
+		exit(-1);
+	}
 	freeRegister--;
 
 }
@@ -123,24 +167,25 @@ int codeGenStr(struct tnode* t, FILE* target_file)
 	return reg;
 }
 
-int codeGenVar(tnode* t, FILE* target_file)
+int codeGenVarOrArray(tnode* t, FILE* target_file)
 {
-	printDebug("Started code generation for Variable");
+	printDebug("Started code generation for Variable/Array");
 
-	int varPos = getVarAddr(t);	
-	int reg0 = getReg();
-	fprintf(target_file, "MOV R%d, [%d]\n", reg0, varPos);
+	int reg1 = getVarAddr(t, target_file);	
+	fprintf(target_file, "MOV R%d, [R%d]\n", reg1, reg1);
 
-	printDebug("Ended code generation for Variable");
+	printDebug("Ended code generation for Variable/Array");
 
-	return reg0;
+	return reg1;
 }
 
 int codeGenRead(struct tnode* t, FILE* target_file)
 {
 	printDebug("Started code generation for Read");
 
-	int varPos = getVarAddr(t->right);
+	saveAllReg(target_file);
+
+	int reg0 = getVarAddr(t->right, target_file);
 
 	int tmpreg = getReg();
 
@@ -148,8 +193,7 @@ int codeGenRead(struct tnode* t, FILE* target_file)
 	fprintf(target_file, "PUSH R%d \n", tmpreg);  	
 	fprintf(target_file, "MOV R%d, -1 \n", tmpreg);
 	fprintf(target_file, "PUSH R%d \n", tmpreg);
-	fprintf(target_file, "MOV R%d, %d \n", tmpreg, varPos);
-	fprintf(target_file, "PUSH R%d \n", tmpreg);
+	fprintf(target_file, "PUSH R%d \n", reg0);
 	fprintf(target_file, "PUSH R%d \n", tmpreg);
 	fprintf(target_file, "PUSH R%d \n", tmpreg);
 	fprintf(target_file, "CALL 0 \n");
@@ -160,6 +204,9 @@ int codeGenRead(struct tnode* t, FILE* target_file)
 	fprintf(target_file, "POP R%d \n", tmpreg);
 
 	freeReg();
+	freeReg();
+
+	restoreAllReg(target_file);
 
 	printDebug("Ended code generation for Read");
 
@@ -171,6 +218,8 @@ int codeGenWrite(struct tnode* t, FILE* target_file)
 {
 
 	printDebug("Started code generation for Write");
+
+	saveAllReg(target_file);
 
 	int tmpreg = getReg();
 
@@ -194,6 +243,8 @@ int codeGenWrite(struct tnode* t, FILE* target_file)
 	freeReg();
 	freeReg();
 
+	restoreAllReg(target_file);
+
 	printDebug("Ended code generation for Write");
 
 
@@ -214,12 +265,13 @@ int codeGenAsgn(struct tnode* t, FILE* target_file)
 
 	printDebug("Started code generation for Asgn");
 
-	int varPos = getVarAddr(t->left);
+	int reg0 = getVarAddr(t->left, target_file);
 	
 	int reg1 = codeGen(t->right, target_file);
 	
-	fprintf(target_file, "MOV [%d], R%d\n", varPos, reg1);
+	fprintf(target_file, "MOV [R%d], R%d\n", reg0, reg1);
 
+	freeReg();
 	freeReg();
 
 	printDebug("Ended code generation for Asgn");
@@ -300,7 +352,8 @@ int codeGen(struct tnode* t, FILE* target_file)
 			reg = codeGenOperator(t, target_file);
 			return reg;
 		case VARIABLE:
-			reg = codeGenVar(t, target_file);
+		case ARRAY:
+			reg = codeGenVarOrArray(t, target_file);
 			return reg;
 		case READ:
 			codeGenRead(t, target_file);

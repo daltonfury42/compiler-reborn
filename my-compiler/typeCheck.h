@@ -9,6 +9,6 @@ void typeCheckAssignment(tnode* t);
 void typeCheckOperator(tnode* t);
 void typeCheckIf(tnode* t);
 void typeCheckWhile(tnode* t);
-
+void typeCheckArray(tnode* t);
 
 #endif

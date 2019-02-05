@@ -25,5 +25,6 @@ tnode* makeOperatorNode(int operator, tnode *l,tnode *r);
 tnode* makeIfNode(tnode* condition, tnode* ifTree, tnode* elseTree);
 tnode* makeWhileNode(tnode* condition, tnode* body);
 tnode* makeLeafNodeStringConst(char* stringContent);
+tnode* makeArrayNode(tnode* l, tnode* r);
 
 #endif

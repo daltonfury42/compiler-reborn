@@ -23,7 +23,7 @@
 
 %error-verbose
 
-%token CONNECTOR READ WRITE VARIABLE ASGN BEG END DECL ENDDECL NUM STR OPERATOR 
+%token CONNECTOR READ WRITE VARIABLE ASGN BEG END DECL ENDDECL NUM STR OPERATOR ARRAY
 
 %token T_NUM T_BOOL T_STR
 
@@ -59,7 +59,8 @@ VarList 	: VarList ',' VarDecl 	{}
 					;
 
 VarDecl		: VARIABLE 							{ Ginstall($1->varname, currentType, 1); }
-					: VARIABLE '[' NUM ']'  { Ginstall($1->varname, currentType, $3->val); }
+					| VARIABLE '[' NUM ']'  { Ginstall($1->varname, currentType, $3->val); }
+					;
 
 code			: BEG slist END 				{	initCompile($2); }
 					| BEG END								{ 		
@@ -81,7 +82,7 @@ stmt 			: ReadStmt
 					| WhileStmt
 					;
 
-ReadStmt 	: READ '(' VARIABLE ')' ';'		{
+ReadStmt 	: READ '(' memLoc ')' ';'		{
 											  $$ = makeReadNode($3);
 											  typeCheckRead($$);
 					 						}
@@ -90,7 +91,7 @@ WriteStmt : WRITE '(' expr ')' ';'		{ $$ = makeWriteNode($3);
 											  typeCheckWrite($$);
 											}
 
-AsgnStmt 	: VARIABLE ASGN expr ';'		{
+AsgnStmt 	: memLoc ASGN expr ';'		{
 											  $$ = makeAssignmentNode($1, $3); 
 											  typeCheckAssignment($$);
 											}
@@ -131,22 +132,27 @@ expr	: expr PLUS expr{ $$ = makeOperatorNode(PLUS, $1, $3);
 			| STR						{
 											  $$ = $1;
 											}
-			| VARIABLE			{ $$ = $1; 
-											}
+			| memLoc				{ $$ = $1; }
 			;
 
 IfStmt 		: IF '(' expr ')' THEN slist ELSE slist ENDIF 	{ $$ = makeIfNode($3, $6, $8); 
 															  														typeCheckIf($$);
 																													}
-			| IF '(' expr ')' THEN slist ENDIF									{ $$ = makeIfNode($3, $6, NULL); 
+					| IF '(' expr ')' THEN slist ENDIF							{ $$ = makeIfNode($3, $6, NULL); 
 																														typeCheckIf($$);
 																													}
-			;
+					;
 
-WhileStmt 	: WHILE '(' expr ')' DO slist ENDWHILE				{ $$ = makeWhileNode($3, $6); 
+WhileStmt : WHILE '(' expr ')' DO slist ENDWHILE					{ $$ = makeWhileNode($3, $6); 
 															  														typeCheckWhile($$);
 																													}
-			;
+					;
+
+memLoc		: VARIABLE																			{	$$ = $1; }
+					| VARIABLE '[' expr ']'													{ 
+																														$$ = makeArrayNode($1, $3);
+																														typeCheckArray($$);
+																													}	
 
 %%
 

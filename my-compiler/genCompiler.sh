@@ -8,5 +8,5 @@ gcc -g lex.yy.c lex.lt.c y.tab.c exptree.c codegen.c labelTranslate.c typeCheck.
 
 set +e
 
-./a.out < ../testProgram.silc
+./a.out < ../bubbleSort.silc
 

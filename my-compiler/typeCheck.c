@@ -99,3 +99,12 @@ void typeCheckWhile(tnode* t)
     }
 }
 
+void typeCheckArray(tnode* t)
+{
+    if(typeOf(t->right) != T_NUM)
+    {
+        typeError("The index of arrays should be of type T_INT.");
+    }
+
+    t->type = typeOf(t->left);
+}

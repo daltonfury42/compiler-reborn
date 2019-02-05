@@ -71,7 +71,7 @@
 
 [\n]		{ lineNumber++; }
 
-[(),;] 		{ return *yytext; }
+[(),;\[\]]	{ return *yytext; }
 
 [a-zA-Z_][a-zA-Z0-9_]* 	{
 							yylval = makeLeafNodeVar(yytext);

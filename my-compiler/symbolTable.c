@@ -52,7 +52,8 @@ void Ginstall(char* name, int type, int size) // Creates a symbol table entry.
     strcpy(newEntry->name, name); 
     newEntry->type = type;
     newEntry->size = size; 
-    newEntry->binding = BindingAddr++;
+    newEntry->binding = BindingAddr;
+    BindingAddr += size;
     newEntry->next = NULL;
 
     if(head == NULL)
