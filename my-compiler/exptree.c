@@ -89,3 +89,8 @@ tnode* makeArrayNode(tnode* l, tnode* r)
 {
 	return createTree(-1, -1, NULL, -1, ARRAY, l, r, NULL);
 }
+
+tnode* makeParamNode(char* varname, int varType)
+{
+	return createTree(-1, varType, varname, -1, -1, NULL, NULL, NULL);
+}

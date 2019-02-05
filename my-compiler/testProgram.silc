@@ -1,6 +1,7 @@
 decl
     number a, b;
     string str;
+    number abc(number p, number q, number r);
 enddecl
 
 begin 

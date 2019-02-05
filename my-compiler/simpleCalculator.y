@@ -23,7 +23,8 @@
 
 %error-verbose
 
-%token CONNECTOR READ WRITE VARIABLE ASGN BEG END DECL ENDDECL NUM STR OPERATOR ARRAY
+%token CONNECTOR READ WRITE IDENTIFIER ASGN BEG END DECL ENDDECL NUM STR OPERATOR ARRAY
+%token VARIABLE
 
 %token T_NUM T_BOOL T_STR
 
@@ -37,7 +38,7 @@
 %%
 
 program		: globalDeclarations code			{}
-			;
+					;
 
 globalDeclarations 	: DECL DeclList ENDDECL 	{}
 					| DECL ENDDECL					{}
@@ -58,9 +59,19 @@ VarList 	: VarList ',' VarDecl 	{}
 					| VarDecl								{}
 					;
 
-VarDecl		: VARIABLE 							{ Ginstall($1->varname, currentType, 1); }
-					| VARIABLE '[' NUM ']'  { Ginstall($1->varname, currentType, $3->val); }
+VarDecl		: IDENTIFIER 										{ GinstallVariable($1->varname, currentType, 1); }
+					| IDENTIFIER '[' NUM ']'  			{ GinstallVariable($1->varname, currentType, $3->val); }
+					|	IDENTIFIER '(' ParamsList ')'	{ GinstallFunction($1->varname, currentType, $3);	}
+					| IDENTIFIER '(' ')'						{ GinstallFunction($1->varname, currentType, NULL); }
 					;
+
+ParamsList:	ParamsList ',' Param				{ $3->left = $1;
+																					$$ = $3;
+																				}
+					| Param												{ $$ = $1; }
+					;
+
+Param			: Type IDENTIFIER							{ $$ = makeParamNode($2->varname, currentType); }					
 
 code			: BEG slist END 				{	initCompile($2); }
 					| BEG END								{ 		
@@ -148,8 +159,8 @@ WhileStmt : WHILE '(' expr ')' DO slist ENDWHILE					{ $$ = makeWhileNode($3, $6
 																													}
 					;
 
-memLoc		: VARIABLE																			{	$$ = $1; }
-					| VARIABLE '[' expr ']'													{ 
+memLoc		: IDENTIFIER																			{	$$ = $1; }
+					| IDENTIFIER '[' expr ']'													{ 
 																														$$ = makeArrayNode($1, $3);
 																														typeCheckArray($$);
 																													}	
