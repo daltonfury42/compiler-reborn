@@ -18,6 +18,7 @@
   extern int lineNumber;
 
   int currentType;
+	int returnType;
 
 %}
 
@@ -61,9 +62,11 @@ VarList 	: VarList ',' VarDecl 	{}
 
 VarDecl		: IDENTIFIER 										{ GinstallVariable($1->varname, currentType, 1); }
 					| IDENTIFIER '[' NUM ']'  			{ GinstallVariable($1->varname, currentType, $3->val); }
-					|	IDENTIFIER '(' ParamsList ')'	{ GinstallFunction($1->varname, currentType, $3);	}
-					| IDENTIFIER '(' ')'						{ GinstallFunction($1->varname, currentType, NULL); }
+					|	fname '(' ParamsList ')'			{ GinstallFunction($1->varname, returnType, $3);	}
+					| fname '(' ')'									{ GinstallFunction($1->varname, returnType, NULL); }
 					;
+
+fname			: IDENTIFIER										{ $$ = $1; returnType = currentType; }
 
 ParamsList:	ParamsList ',' Param				{ $3->left = $1;
 																					$$ = $3;
