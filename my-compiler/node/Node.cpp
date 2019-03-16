@@ -1,4 +1,4 @@
-#include "node.hpp"
+#include "Node.hpp"
 #include <ios>
 #include <fstream>
 #include <iostream>
@@ -52,7 +52,45 @@ void Node::freeReg()
 	freeRegister--;
 }
 
-std::string Node::getLabel()
+Label Node::getLabel()
 {
 	return std::to_string(label++);
+}
+
+Register MemoryLocationNode::codeGen()
+{
+	auto reg = getBinding();
+
+	writeToFile("MOV R" + reg + ", R" + reg);
+
+	return reg;
+}
+
+void Node::codeGenInit(Node& node) 
+{
+	printDebug("Code genration started");
+	/* Header */
+	writeToFile("0");
+	writeToFile("2056");
+	writeToFile("0");
+	writeToFile("0");
+	writeToFile("0");
+	writeToFile("0");
+	writeToFile("0");
+	writeToFile("0");
+
+	writeToFile("BRKP");
+	writeToFile("MOV SP, 4121");	
+	//4095 + 26 for storing variables. a is in [4095+1]
+	
+	node.codeGen();
+	
+	writeToFile("MOV R0, \"Exit\"");
+   	writeToFile("PUSH R0");
+   	writeToFile("CALL 0");
+
+	if (freeRegister != 0)
+		printDebug("Register Leaks!");
+
+	printDebug("Code generation ended");
 }

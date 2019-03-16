@@ -1,4 +1,4 @@
-#include  "node.hpp"
+#include  "Node.hpp"
 
 class ReadNode : Node
 {
@@ -6,24 +6,20 @@ private:
     MemoryLocationNode& readTarget;
 public:
     ReadNode(MemoryLocationNode& readTarget) : readTarget(readTarget) {}
-    ~ReadNode();
+    ~ReadNode() {}
 
-    int codeGen();
+    Register codeGen();
 };
 
-ReadNode::~ReadNode()
-{
-}
-
-int ReadNode::codeGen()
+Register ReadNode::codeGen()
 {
     printDebug("Started code generation for Read");
 
 	saveAllReg();
 
-	std::string reg0 = readTarget.getBinding();
+	Register reg0 = readTarget.getBinding();
 
-	std::string tmpreg = getReg();
+	Register tmpreg = getReg();
 
 	writeToFile("MOV R" + tmpreg + ", \"Read\"");		
 	writeToFile("PUSH R" + tmpreg);  	
@@ -47,5 +43,5 @@ int ReadNode::codeGen()
 	printDebug("Ended code generation for Read");
 
 
-	return -1;
+	return "None";
 }
