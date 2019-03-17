@@ -9,7 +9,6 @@ int Node::label = 0;
 std::string Node::outFileName = "outFile.xsm";
 SymbolTable Node::gSymbolTable = SymbolTable("GSymbolTable");
 
-
 void Node::writeToFile(std::string line)
 {
     std::ofstream log(outFileName, std::ios_base::app | std::ios_base::out);

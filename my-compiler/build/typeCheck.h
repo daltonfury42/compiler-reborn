@@ -1,1 +1,0 @@
-../typeCheck.h

@@ -2,7 +2,7 @@
   #include <stdio.h>
   #include "y.tab.h"
   #include <stdlib.h>
-  #include "exptree.h"
+  #include "Node.hpp"
 
   void yyerror(const char *s);
 
@@ -22,7 +22,7 @@
 	
 [0-9]+ 		{
 				int number = atoi(yytext); 
-				yylval = makeLeafNodeNum(number);	
+				yylval = NumberNode(number);	
 				return NUM;
 			}
 
@@ -63,7 +63,7 @@
 "endwhile"	{ return ENDWHILE; }
 
 ["][^"]*["]	{
-				yylval = makeLeafNodeStringConst(yytext);
+				yylval = StringNode(yytext);
 				return STR;
 			}
 
@@ -74,7 +74,7 @@
 [(),;\[\]]	{ return *yytext; }
 
 [a-zA-Z_][a-zA-Z0-9_]* 	{
-							yylval = makeLeafNodeVar(yytext);
+							yylval = IdentifierNode(yytext);
 							return IDENTIFIER;
 						}
 

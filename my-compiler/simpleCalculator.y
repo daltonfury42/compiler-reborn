@@ -1,19 +1,17 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
-  #include "exptree.h"
-  #include "codegen.h"
+	#include "Node.hpp"
   #include "typeCheck.h"
-  #include "symbolTable.h"
+  #include "SymbolTable.hpp"
 
   int yylex(void);
   int ltlex(void);
   extern FILE* ltin;
 
   void yyerror(const char *s);
-	void initCompile(tnode* root);
 
-  #define YYSTYPE tnode* 
+  #define YYSTYPE Node
 
   extern int lineNumber;
 
@@ -24,12 +22,14 @@
 
 %error-verbose
 
-%token CONNECTOR READ WRITE IDENTIFIER ASGN BEG END DECL ENDDECL NUM STR OPERATOR ARRAY
+%token BEG END DECL ENDDECL
 %token VARIABLE
 
 %token T_NUM T_BOOL T_STR
 
 %token IF THEN ELSE ENDIF WHILE DO ENDWHILE
+
+%token ASGN IDENTIFIER NUM STR READ WRITE
 
 %left GT GTE LT LTE EQ NEQ
 
@@ -60,21 +60,9 @@ VarList 	: VarList ',' VarDecl 	{}
 					| VarDecl								{}
 					;
 
-VarDecl		: IDENTIFIER 										{ GinstallVariable($1->varname, currentType, 1); }
-					| IDENTIFIER '[' NUM ']'  			{ GinstallVariable($1->varname, currentType, $3->val); }
-					|	fname '(' ParamsList ')'			{ GinstallFunction($1->varname, returnType, $3);	}
-					| fname '(' ')'									{ GinstallFunction($1->varname, returnType, NULL); }
+VarDecl		: IDENTIFIER 										{ Node::gSymbolTable.install($1, currentType, 1); }
+					| IDENTIFIER '[' NUM ']'  			{ Node::gSymbolTable.install($1, currentType, $3); }
 					;
-
-fname			: IDENTIFIER										{ $$ = $1; returnType = currentType; }
-
-ParamsList:	ParamsList ',' Param				{ $3->left = $1;
-																					$$ = $3;
-																				}
-					| Param												{ $$ = $1; }
-					;
-
-Param			: Type IDENTIFIER							{ $$ = makeParamNode($2->varname, currentType); }					
 
 code			: BEG slist END 				{	initCompile($2); }
 					| BEG END								{ 		
@@ -83,9 +71,7 @@ code			: BEG slist END 				{	initCompile($2); }
 																	}
 					;
 
-slist 		: slist stmt 						{
-																		$$ = makeConnectorNode($1, $2);
-																	}
+slist 		: stmt slist 						{ $$ = ConnectorNode($1, $2); }
 					| stmt									{ $$ = $1; }
 					;
 
@@ -96,77 +82,37 @@ stmt 			: ReadStmt
 					| WhileStmt
 					;
 
-ReadStmt 	: READ '(' memLoc ')' ';'		{
-											  $$ = makeReadNode($3);
-											  typeCheckRead($$);
-					 						}
+ReadStmt 	: READ '(' memLoc ')' ';'		{ $$ = ReadNode($3); }
 			
-WriteStmt : WRITE '(' expr ')' ';'		{ $$ = makeWriteNode($3); 
-											  typeCheckWrite($$);
-											}
+WriteStmt : WRITE '(' expr ')' ';'		{ $$ = WriteNode($3); }
 
-AsgnStmt 	: memLoc ASGN expr ';'		{
-											  $$ = makeAssignmentNode($1, $3); 
-											  typeCheckAssignment($$);
-											}
+AsgnStmt 	: memLoc ASGN expr ';'			{ $$ = AssignmentNode($1, $3) }
 
-expr	: expr PLUS expr{ $$ = makeOperatorNode(PLUS, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr MINUS expr{$$ = makeOperatorNode(MINUS, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr MUL expr	{ $$ = makeOperatorNode(MUL, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr DIV expr	{ $$ = makeOperatorNode(DIV, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr GT expr	{ $$ = makeOperatorNode(GT, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr GTE expr	{ $$ = makeOperatorNode(GTE, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr LT expr	{ $$ = makeOperatorNode(LT, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr LTE expr	{ $$ = makeOperatorNode(LTE, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr EQ expr	{ $$ = makeOperatorNode(EQ, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| expr NEQ expr	{ $$ = makeOperatorNode(NEQ, $1, $3); 
-											  typeCheckOperator($$);
-											}
-			| '(' expr ')'	{ $$ = $2; }
-			| NUM						{ $$ = $1; // Node made in .l file
-											}	
-			| STR						{
-											  $$ = $1;
-											}
-			| memLoc				{ $$ = $1; }
+expr	: expr PLUS expr	{ $$ = OperatorNode(PLUS, $1, $3); }
+			| expr MINUS expr	{ $$ = OperatorNode(MINUS, $1, $3); }
+			| expr MUL expr		{ $$ = OperatorNode(MUL, $1, $3); }
+			| expr DIV expr		{ $$ = OperatorNode(DIV, $1, $3); }
+			| expr GT expr		{ $$ = OperatorNode(GT, $1, $3); }
+			| expr GTE expr		{ $$ = OperatorNode(GTE, $1, $3); }
+			| expr LT expr		{ $$ = OperatorNode(LT, $1, $3); }
+			| expr LTE expr		{ $$ = OperatorNode(LTE, $1, $3); }
+			| expr EQ expr		{ $$ = OperatorNode(EQ, $1, $3); }
+			| expr NEQ expr		{ $$ = OperatorNode(NEQ, $1, $3); }
+			| '(' expr ')'		{ $$ = $2; }
+			| NUM							{ $$ = $1; }	
+			| STR							{ $$ = $1; }
+			| memLoc					{ $$ = $1; }
 			;
 
-IfStmt 		: IF '(' expr ')' THEN slist ELSE slist ENDIF 	{ $$ = makeIfNode($3, $6, $8); 
-															  														typeCheckIf($$);
-																													}
-					| IF '(' expr ')' THEN slist ENDIF							{ $$ = makeIfNode($3, $6, NULL); 
-																														typeCheckIf($$);
-																													}
+IfStmt 		: IF '(' expr ')' THEN slist ELSE slist ENDIF 		{ $$ = IfNode($3, $6, $8); }
+					| IF '(' expr ')' THEN slist ENDIF								{ $$ = IfNode($3, $6); }
 					;
 
-WhileStmt : WHILE '(' expr ')' DO slist ENDWHILE					{ $$ = makeWhileNode($3, $6); 
-															  														typeCheckWhile($$);
-																													}
+WhileStmt : WHILE '(' expr ')' DO slist ENDWHILE						{ $$ = WhileNode($3, $6); }
 					;
 
-memLoc		: IDENTIFIER																			{	$$ = $1; }
-					| IDENTIFIER '[' expr ']'													{ 
-																														$$ = makeArrayNode($1, $3);
-																														typeCheckArray($$);
-																													}	
+memLoc		: IDENTIFIER																			{	$$ = VariableNode($1); }
+					| IDENTIFIER '[' expr ']'													{ $$ = ArrayNode($1, $3); }	
 
 %%
 
@@ -181,7 +127,7 @@ int main()
   	return 1;
 }
 
-void initCompile(tnode* root)
+void initCompile(Node& root)
 {
 	FILE* fptr;
 	if ( !(fptr = fopen("tmp_file.xsm", "w")) )
@@ -191,7 +137,7 @@ void initCompile(tnode* root)
   }
        								
 	// Code Generate
-	codeGenXsm(root, fptr);	
+	Node::codeGenInit(root, fptr);	
 									
 	fclose(fptr);
 

@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 #include <exception>
+#include "Node.hpp"
+
 
 class SymbolNotFoundException : public std::exception {
 private:
@@ -59,11 +61,14 @@ class SymbolTable
 private:
     std::string symbolTableName;
     std::map<std::string, SymbolTableEntry> entries;
+    int nextFreeBindingAddr = 4096;
+    static int nextFreeFLabel;
 public:
     SymbolTable(std::string symbolTableName) : symbolTableName(symbolTableName) {};
     ~SymbolTable() {};
     SymbolTableEntry lookUp(std::string symbolName);
-    void install(SymbolTableEntry& entry);
+    void install(IdentifierNode& identifierNode, int type, int size);
+    void install(IdentifierNode& identifierNode, int type, std::vector<VariableDecl> paramList);
 };
 
 #endif

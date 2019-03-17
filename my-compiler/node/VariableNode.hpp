@@ -8,7 +8,7 @@ class VariableNode : public MemoryLocationNode
 private:
     std::string variableName;
 public:
-    VariableNode(std::string variableName): variableName(variableName) {}
+    VariableNode(IdentifierNode& identifierNode): variableName(identifierNode.getIdentifier()) {}
     // Register codeGen(); Inderits from MemoryLocationNode codeGen()
     Register getBinding();
 };

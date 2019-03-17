@@ -23,11 +23,11 @@ class Node
         static Register getReg();
         static void freeReg();
         static std::string getLabel();
-        static SymbolTable gSymbolTable;
 
     public:
         virtual Register codeGen() = 0;
         static void codeGenInit(Node& node);
+        static SymbolTable gSymbolTable;
 };
 
 class MemoryLocationNode : public Node
@@ -48,5 +48,6 @@ class MemoryLocationNode : public Node
 #include "VariableNode.hpp"
 #include "WhileNode.hpp"
 #include "WriteNode.hpp"
+#include "IdentifierNode.hpp"
 
 #endif

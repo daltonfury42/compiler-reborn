@@ -35,6 +35,10 @@
         "tuple": "cpp",
         "typeinfo": "cpp",
         "utility": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "node.hpp": "cpp",
+        "stdlib.h": "c",
+        "symboltable.hpp": "c",
+        "identifiernode.hpp": "c"
     }
 }

@@ -1,6 +1,8 @@
 #include "SymbolTable.hpp"
 #include <iostream>
 
+int SymbolTable::nextFreeFLabel = 0;
+
 SymbolTableEntry::SymbolTableEntry(std::string symbolName, int type, int size, int binding) : SymbolTableEntry(symbolName, type)
 {
     this->size = size;
@@ -31,12 +33,31 @@ SymbolTableEntry SymbolTable::lookUp(std::string symbolName)
     }
 }
 
-void SymbolTable::install(SymbolTableEntry& entry)
+void SymbolTable::install(IdentifierNode& identifierNode, int type, int size)
 {
-    if (entries.find(entry.getSymbolName()) != entries.end())
+    std::string symbolName = identifierNode.getIdentifier();
+
+    if (entries.find(symbolName) != entries.end())
     {
-        std::cout << "Error: Multiple redeclarations of symbol " << entry.getSymbolName() << std::endl;
+        std::cout << "Error: Multiple redeclarations of symbol " << symbolName << std::endl;
     }
 
-    entries.insert(std::pair<std::string, SymbolTableEntry>(entry.getSymbolName(), entry));
+    int binding = nextFreeBindingAddr;
+    nextFreeBindingAddr += size;
+
+    entries.insert(std::pair<std::string, SymbolTableEntry>(symbolName, SymbolTableEntry(symbolName, type, size, binding)));
+}
+
+void SymbolTable::install(IdentifierNode& identifierNode, int type, std::vector<VariableDecl> paramList)
+{
+    std::string symbolName = identifierNode.getIdentifier();
+    
+    if (entries.find(symbolName) != entries.end())
+    {
+        std::cout << "Error: Multiple redeclarations of symbol " << symbolName << std::endl;
+    }
+
+    entries.insert(std::pair<std::string, SymbolTableEntry>(symbolName, SymbolTableEntry(symbolName, type, paramList, nextFreeFLabel)));
+
+    nextFreeFLabel++;
 }
