@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-class AssignmentNode : Node
+class AssignmentNode : public Node
 {
 private:
     MemoryLocationNode& lValue;

@@ -1,9 +1,11 @@
-#ifndef NODE_HPP
-#define NODE_HPP
+#ifndef SYMBOLTABLE_HPP
+#define SYMBOLTABLE_HPP
 
 #include <vector>
 #include <map>
 #include <string>
+#include <optional>
+
 
 class VariableDecl
 {

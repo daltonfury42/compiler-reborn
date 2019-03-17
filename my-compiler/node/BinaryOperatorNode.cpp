@@ -1,7 +1,7 @@
 #include  "Node.hpp"
-#include "y.tab.h"
+#include "../y.tab.h"
 
-class BinaryOperatorNode : Node
+class BinaryOperatorNode : public Node
 {
 private:
     int operatorCode;
@@ -12,7 +12,7 @@ public:
         operatorCode(operatorCode), leftExpr(leftExpr), rightExpr(rightExpr) {}
     ~BinaryOperatorNode();
 
-    Register codeGen() {}
+    Register codeGen();
 };
 
 Register BinaryOperatorNode::codeGen()

@@ -1,6 +1,6 @@
 #include  "Node.hpp"
 
-class ReadNode : Node
+class ReadNode : public Node
 {
 private:
     MemoryLocationNode& readTarget;

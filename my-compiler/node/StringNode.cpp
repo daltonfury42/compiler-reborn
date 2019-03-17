@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-class StringNode : Node
+class StringNode : public Node
 {
 private:
     std::string val;

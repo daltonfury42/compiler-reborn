@@ -2,7 +2,7 @@
 #define NODE_HPP
 
 #include<string>
-#include "../symbolTable/SymbolTable.hpp"
+#include "SymbolTable.hpp"
 
 typedef std::string Register;
 typedef std::string Label;
@@ -26,7 +26,7 @@ class Node
 
     public:
         virtual Register codeGen() = 0;
-        static void Node::codeGenInit(Node& node);
+        static void codeGenInit(Node& node);
 };
 
 int Node::freeRegister = 0;
@@ -38,5 +38,17 @@ class MemoryLocationNode : public Node
         virtual Register getBinding() = 0;
         Register codeGen();
 };
+
+#include "ArrayNode.cpp"
+#include "AssignmentNode.cpp"
+#include "BinaryOperatorNode.cpp"
+#include "ConnectorNode.cpp"
+#include "IfNode.cpp"
+#include "NumberNode.cpp"
+#include "ReadNode.cpp"
+#include "StringNode.cpp"
+#include "VariableNode.cpp"
+#include "WhileNode.cpp"
+#include "WriteNode.cpp"
 
 #endif

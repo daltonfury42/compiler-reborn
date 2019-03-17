@@ -1,6 +1,6 @@
 #include "Node.hpp"
 
-class NumberNode : Node
+class NumberNode : public Node
 {
 private:
     int val;
