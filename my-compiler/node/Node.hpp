@@ -10,15 +10,15 @@ typedef std::string Label;
 class Node
 {
     private:
-        std::string outFileName = "outFile.xsm";
+        static std::string outFileName;
         static int freeRegister;
         static int label;
 
     protected:
-        void writeToFile(std::string line);
+        static void writeToFile(std::string line);
         void restoreAllReg();
         void saveAllReg();
-        void printDebug(std::string msg);
+        static void printDebug(std::string msg);
         static Register getReg();
         static void freeReg();
         static std::string getLabel();
@@ -29,9 +29,6 @@ class Node
         static void codeGenInit(Node& node);
 };
 
-int Node::freeRegister = 0;
-int Node::label = 0;
-
 class MemoryLocationNode : public Node
 {
     public:
@@ -39,16 +36,16 @@ class MemoryLocationNode : public Node
         Register codeGen();
 };
 
-#include "ArrayNode.cpp"
-#include "AssignmentNode.cpp"
-#include "BinaryOperatorNode.cpp"
-#include "ConnectorNode.cpp"
-#include "IfNode.cpp"
-#include "NumberNode.cpp"
-#include "ReadNode.cpp"
-#include "StringNode.cpp"
-#include "VariableNode.cpp"
-#include "WhileNode.cpp"
-#include "WriteNode.cpp"
+#include "ArrayNode.hpp"
+#include "AssignmentNode.hpp"
+#include "BinaryOperatorNode.hpp"
+#include "ConnectorNode.hpp"
+#include "IfNode.hpp"
+#include "NumberNode.hpp"
+#include "ReadNode.hpp"
+#include "StringNode.hpp"
+#include "VariableNode.hpp"
+#include "WhileNode.hpp"
+#include "WriteNode.hpp"
 
 #endif

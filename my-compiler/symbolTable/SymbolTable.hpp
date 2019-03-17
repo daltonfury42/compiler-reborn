@@ -4,8 +4,21 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <optional>
+#include <exception>
 
+class SymbolNotFoundException : public std::exception {
+private:
+    std::string symbolName;
+    std::string symbolTableName;
+public:
+    SymbolNotFoundException(std::string symbolName, std::string symbolTableName) 
+        : symbolName(symbolName), symbolTableName(symbolTableName) {}
+
+    virtual const char* what() const throw()
+    {
+        return (symbolName + " not found in " + symbolTableName).c_str();
+    }
+};
 
 class VariableDecl
 {
@@ -14,7 +27,6 @@ private:
     int type;
 public:
     VariableDecl(std::string variableName, int type) : variableName(variableName), type(type) {};
-    ~VariableDecl();
     std::string getVariableName() { return variableName; }
     int getVariableType() { return type; }
 };
@@ -39,17 +51,20 @@ public:
     SymbolTableEntry(std::string symbolName, int type, std::vector<VariableDecl> paramList, int flabel);
     
     std::string getSymbolName() { return symbolName; }
+    int getBinding() { return binding; }
 };
 
 class SymbolTable
 {
 private:
+    std::string symbolTableName;
     std::map<std::string, SymbolTableEntry> entries;
 public:
-    SymbolTable() {};
+    SymbolTable(std::string symbolTableName) : symbolTableName(symbolTableName) {};
     ~SymbolTable() {};
-    std::optional<SymbolTableEntry> lookUp(std::string symbolName);
+    SymbolTableEntry lookUp(std::string symbolName);
     void install(SymbolTableEntry& entry);
 };
 
 #endif
+

@@ -1,15 +1,4 @@
-#include  "Node.hpp"
-
-class ReadNode : public Node
-{
-private:
-    MemoryLocationNode& readTarget;
-public:
-    ReadNode(MemoryLocationNode& readTarget) : readTarget(readTarget) {}
-    ~ReadNode() {}
-
-    Register codeGen();
-};
+#include "ReadNode.hpp"
 
 Register ReadNode::codeGen()
 {

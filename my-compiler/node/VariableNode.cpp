@@ -1,19 +1,8 @@
-#include "Node.hpp"
-
-class VariableNode : public MemoryLocationNode
-{
-private:
-    std::string variableName;
-public:
-    VariableNode(std::string variableName): variableName(variableName) {}
-    ~VariableNode() {}
-    // Register codeGen(); Inderits from MemoryLocationNode codeGen()
-    Register getBinding();
-};
+#include "VariableNode.hpp"
 
 Register VariableNode::getBinding()
 {
-    auto symbolTableEntry = gSymbolTable.gLookup(variableName);
+    auto symbolTableEntry = gSymbolTable.lookUp(variableName);
     int binding  = symbolTableEntry.getBinding();
 
     auto reg = getReg();

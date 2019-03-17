@@ -17,13 +17,13 @@ SymbolTableEntry::SymbolTableEntry(std::string symbolName, int type, std::vector
     this->isVariable = false;
 }
 
-std::optional<SymbolTableEntry> SymbolTable::lookUp(std::string symbolName)
+SymbolTableEntry SymbolTable::lookUp(std::string symbolName)
 {
     auto it = entries.find(symbolName);
 
     if (it == entries.end())
     {
-        return {};
+       throw SymbolNotFoundException(symbolName, symbolTableName);
     }
     else
     {

@@ -1,19 +1,5 @@
-#include  "Node.hpp"
+#include  "BinaryOperatorNode.hpp"
 #include "../y.tab.h"
-
-class BinaryOperatorNode : public Node
-{
-private:
-    int operatorCode;
-    Node& leftExpr;
-    Node& rightExpr;
-public:
-    BinaryOperatorNode(int operatorCode, Node& leftExpr, Node& rightExpr) : 
-        operatorCode(operatorCode), leftExpr(leftExpr), rightExpr(rightExpr) {}
-    ~BinaryOperatorNode();
-
-    Register codeGen();
-};
 
 Register BinaryOperatorNode::codeGen()
 {

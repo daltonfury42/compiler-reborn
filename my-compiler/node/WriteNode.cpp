@@ -1,13 +1,4 @@
-#include "Node.hpp"
-
-class WriteNode : public Node
-{
-private:
-    MemoryLocationNode& writeLocation;
-public:
-    WriteNode(MemoryLocationNode& writeLocation) : writeLocation(writeLocation) {}
-    Register codeGen();
-};
+#include "WriteNode.hpp"
 
 Register WriteNode::codeGen()
 {

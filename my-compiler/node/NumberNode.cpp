@@ -1,14 +1,4 @@
-#include "Node.hpp"
-
-class NumberNode : public Node
-{
-private:
-    int val;
-public:
-    NumberNode(int val) : val(val) {}
-    ~NumberNode() {}
-    Register codeGen();
-};
+#include "NumberNode.hpp"
 
 Register NumberNode::codeGen() 
 {

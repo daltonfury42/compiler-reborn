@@ -1,19 +1,8 @@
-#include "Node.hpp"
-
-class ArrayNode : public MemoryLocationNode
-{
-private:
-    std::string arrayName;
-    int index;
-    SymbolTableEntry symbolTableEntry;
-public:
-    ArrayNode(std::string arrayName, int index);
-    Register getBinding();
-};
+#include "ArrayNode.hpp"
 
 Register ArrayNode::getBinding()
 {
-    auto symbolTableEntry = 
+    auto symbolTableEntry = gSymbolTable.lookUp(arrayName);
     int binding  = symbolTableEntry.getBinding();
 
     auto reg = getReg();

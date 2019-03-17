@@ -1,14 +1,4 @@
-#include "Node.hpp"
-
-class StringNode : public Node
-{
-private:
-    std::string val;
-public:
-    StringNode(std::string val) : val(val) {}
-    ~StringNode() {}
-    Register codeGen();
-};
+#include "StringNode.hpp"
 
 Register StringNode::codeGen() 
 {
