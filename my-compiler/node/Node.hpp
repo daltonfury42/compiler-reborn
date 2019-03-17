@@ -6,6 +6,7 @@
 
 typedef std::string Register;
 typedef std::string Label;
+typedef int Type;
 
 class Node
 {
